@@ -1,0 +1,42 @@
+{
+  "name": "creepyface-firefly",
+  "version": "1.0.0-beta.1",
+  "files": [
+    "dist"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "start": "parcel serve test/index.html",
+    "build": "rm -rf dist .cache && tsc && parcel build src/index.ts",
+    "precommit": "lint-staged"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/4lejandrito/creepyface-firefly.git"
+  },
+  "lint-staged": {
+    "linters": {
+      "*.{js,scss,json,ts,tsx,html}": [
+        "prettier-standard",
+        "git add"
+      ]
+    }
+  },
+  "author": "Alejandro Tardín",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/4lejandrito/creepyface-firefly/issues"
+  },
+  "devDependencies": {
+    "@types/raf": "^3.4.0",
+    "creepyface": "4.3.0-beta.0",
+    "husky": "^0.14.3",
+    "lint-staged": "^5.0.0",
+    "parcel-bundler": "^1.11.0",
+    "present": "^1.0.0",
+    "prettier-standard": "^9.1.1",
+    "raf": "^3.4.1",
+    "typescript": "^3.7.3"
+  }
+}
