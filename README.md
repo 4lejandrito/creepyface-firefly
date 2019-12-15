@@ -1,6 +1,6 @@
 # Creepyface Firefly
 
-A point provider for [Creepyface](https://github.com/4lejandrito/creepyface).
+A point provider for [Creepyface](https://github.com/4lejandrito/creepyface) to make your face follow a firefly.
 
 ## Usage
 ```html
