@@ -2,20 +2,24 @@ import {
   Observer,
   Observable
 } from 'creepyface/dist/observables/util/observable'
-import { Vector } from 'creepyface/dist/util/algebra'
+import { Point } from 'creepyface/dist/util/algebra'
 import raf from 'raf'
 import now from 'present'
 import creepyface from 'creepyface'
 
-const diff = (v1: Vector, v2: Vector): Vector => v1.map((x, i) => x - v2[i])
-const add = (v1: Vector, v2: Vector): Vector => v1.map((x, i) => x + v2[i])
+type Vector = [number, number]
+
+const diff = (v1: Point, v2: Point): Point =>
+  v1.map((x, i) => x - v2[i]) as Point
+const add = (v1: Point, v2: Point): Point =>
+  v1.map((x, i) => x + v2[i]) as Point
 const sign = (n: number) => (n ? (n < 0 ? -1 : 1) : 0)
 const rad = (deg: number) => (deg * Math.PI) / 180
 const deg = (rad: number) => (rad * 180) / Math.PI
 const mod = (n: number, m: number) => (m + (n % m)) % m
 const getAngle = (v: Vector): number =>
   deg(mod(Math.atan2(v[1], v[0]), 2 * Math.PI))
-const rotate = (v: Vector, deg: number) => [
+const rotate = (v: Vector, deg: number): Vector => [
   v[0] * Math.cos(rad(deg)) - v[1] * Math.sin(rad(deg)),
   v[0] * Math.sin(rad(deg)) + v[1] * Math.cos(rad(deg))
 ]
@@ -23,7 +27,7 @@ const rand = (x: number) => Math.floor(Math.random() * x)
 const sum = (x: number, y: number) => x + y
 const square = (x: number) => x * x
 const norm = (v: Vector) => Math.sqrt(v.map(square).reduce(sum, 0))
-const times = (v: Vector, n: number) => v.map(x => x * n)
+const times = (v: Vector, n: number): Vector => v.map(x => x * n) as Vector
 
 function loop (fn: (time: number) => void) {
   let last = now()
@@ -36,8 +40,14 @@ function loop (fn: (time: number) => void) {
   return () => raf.cancel(handle)
 }
 
-function firefly (props: { onMove: (position: Vector) => void }) {
-  let firefly = {
+type Firefly = {
+  destination: Point
+  position: Point
+  vspeed: Vector
+}
+
+function firefly (props: { onMove: (position: Point) => void }) {
+  let firefly: Firefly = {
     destination: [window.innerWidth / 2, window.innerHeight / 2],
     position: [rand(window.innerWidth), rand(window.innerHeight)],
     vspeed: [0.3, 0.3]
@@ -55,7 +65,7 @@ function firefly (props: { onMove: (position: Vector) => void }) {
   document.addEventListener('mousemove', mouseListener, true)
   const touchListener = (event: TouchEvent) =>
     observers.forEach(observer => {
-      let point = [0, 0]
+      let point: Point = [0, 0]
       for (let i = 0; i < event.touches.length; i++) {
         const touch = event.touches[i]
         point = add(point, [touch.clientX, touch.clientY])
@@ -86,10 +96,10 @@ function firefly (props: { onMove: (position: Vector) => void }) {
 
       props.onMove(firefly.position)
     } else {
-      firefly.destination = [window.innerWidth, window.innerHeight]
-        .map(n => n - 200)
-        .map(rand)
-        .map(n => n + 100)
+      firefly.destination = [
+        rand(window.innerWidth - 200) + 100,
+        rand(window.innerHeight - 200) + 100
+      ]
     }
   })
 
@@ -101,9 +111,9 @@ function firefly (props: { onMove: (position: Vector) => void }) {
   }
 }
 
-let observers: Observer<Vector>[] = []
+let observers: Observer<Point>[] = []
 let cancel = () => {}
-const subscriber = (observer: Observer<Vector>) => {
+const subscriber = (observer: Observer<Point>) => {
   if (observers.length === 0) {
     cancel = firefly({
       onMove: position => observers.map(observer => observer.next(position))
@@ -118,12 +128,12 @@ const subscriber = (observer: Observer<Vector>) => {
   }
 }
 
-const fireflyObservable: Observable<Vector> = {
+const fireflyObservable: Observable<Point> = {
   subscribe (consumer) {
     return { unsubscribe: subscriber({ next: consumer }) }
   }
 }
 
-creepyface.registerPointSource('firefly', fireflyObservable)
+creepyface.registerObservable('firefly', fireflyObservable)
 
 export default fireflyObservable
