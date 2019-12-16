@@ -130,8 +130,6 @@ declare global {
   }
 }
 
-if (window.creepyface) {
-  window.creepyface.registerPointSource('firefly', fireflyObservable)
-}
+window?.creepyface?.registerPointSource('firefly', fireflyObservable)
 
 export default fireflyObservable
