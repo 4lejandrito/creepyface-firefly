@@ -12,22 +12,15 @@ import {
   sign,
   Vector
 } from 'creepyface/dist/util/algebra'
-import raf, { cancel } from 'raf'
+import raf from 'raf'
 import now from 'present'
 import creepyface from 'creepyface'
 
-type Creepyface = typeof creepyface
-declare global {
-  interface Window {
-    creepyface?: Creepyface
-  }
-}
-
-export const rand = (x: number) => Math.floor(Math.random() * x)
-export const sum = (x: number, y: number) => x + y
-export const square = (x: number) => x * x
-export const norm = (v: Vector) => Math.sqrt(v.map(square).reduce(sum, 0))
-export const times = (v: Vector, n: number) => v.map(x => x * n)
+const rand = (x: number) => Math.floor(Math.random() * x)
+const sum = (x: number, y: number) => x + y
+const square = (x: number) => x * x
+const norm = (v: Vector) => Math.sqrt(v.map(square).reduce(sum, 0))
+const times = (v: Vector, n: number) => v.map(x => x * n)
 
 function loop (fn: (time: number) => void) {
   let last = now()
@@ -37,7 +30,7 @@ function loop (fn: (time: number) => void) {
     last = current
     handle = raf(update)
   })
-  return () => cancel(handle)
+  return () => raf.cancel(handle)
 }
 
 function firefly (props: { onMove: (position: Vector) => void }) {
@@ -94,28 +87,32 @@ function firefly (props: { onMove: (position: Vector) => void }) {
   }
 }
 
-export default function register (creepyface: Creepyface) {
-  let observers: Observer<Vector>[] = []
-  let cancel = () => {}
-  creepyface.registerPointSource(
-    'firefly',
-    observable<Vector>(observer => {
-      if (observers.length === 0) {
-        cancel = firefly({
-          onMove: position => observers.map(observer => observer.next(position))
-        })
-      }
-      observers = [...observers, observer]
-      return () => {
-        observers = observers.filter(o => o !== observer)
-        if (observers.length === 0) {
-          cancel()
-        }
-      }
+let observers: Observer<Vector>[] = []
+let cancel = () => {}
+
+const fireflyObservable = observable<Vector>(observer => {
+  if (observers.length === 0) {
+    cancel = firefly({
+      onMove: position => observers.map(observer => observer.next(position))
     })
-  )
+  }
+  observers = [...observers, observer]
+  return () => {
+    observers = observers.filter(o => o !== observer)
+    if (observers.length === 0) {
+      cancel()
+    }
+  }
+})
+
+declare global {
+  interface Window {
+    creepyface?: typeof creepyface
+  }
 }
 
 if (window.creepyface) {
-  register(window.creepyface)
+  window.creepyface.registerPointSource('firefly', fireflyObservable)
 }
+
+export default fireflyObservable
