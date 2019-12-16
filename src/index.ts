@@ -124,12 +124,6 @@ const fireflyObservable: Observable<Vector> = {
   }
 }
 
-declare global {
-  interface Window {
-    creepyface?: typeof creepyface
-  }
-}
-
-window?.creepyface?.registerPointSource('firefly', fireflyObservable)
+creepyface.registerPointSource('firefly', fireflyObservable)
 
 export default fireflyObservable

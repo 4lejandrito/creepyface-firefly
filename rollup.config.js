@@ -9,10 +9,12 @@ const extensions = ['.js', '.ts']
 export default [
   {
     input: 'src/index.ts',
+    external: ['creepyface'],
     output: {
       file: pkg.main,
       format: 'umd',
-      name: 'creepyface-firefly'
+      name: 'creepyface-firefly',
+      globals: { creepyface: 'creepyface' }
     },
     plugins: [
       resolve({ extensions, browser: true }),
