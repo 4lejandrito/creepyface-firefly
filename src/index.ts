@@ -1,21 +1,24 @@
-import mouse from 'creepyface/dist/observables/mouse'
-import finger from 'creepyface/dist/observables/finger'
-import combined from 'creepyface/dist/observables/combined'
-import observable, {
-  Observer
-} from 'creepyface/dist/observables/util/observable'
 import {
-  rotate,
-  getAngle,
-  diff,
-  add,
-  sign,
-  Vector
-} from 'creepyface/dist/util/algebra'
+  Observer,
+  Observable
+} from 'creepyface/dist/observables/util/observable'
+import { Vector } from 'creepyface/dist/util/algebra'
 import raf from 'raf'
 import now from 'present'
 import creepyface from 'creepyface'
 
+const diff = (v1: Vector, v2: Vector): Vector => v1.map((x, i) => x - v2[i])
+const add = (v1: Vector, v2: Vector): Vector => v1.map((x, i) => x + v2[i])
+const sign = (n: number) => (n ? (n < 0 ? -1 : 1) : 0)
+const rad = (deg: number) => (deg * Math.PI) / 180
+const deg = (rad: number) => (rad * 180) / Math.PI
+const mod = (n: number, m: number) => (m + (n % m)) % m
+const getAngle = (v: Vector): number =>
+  deg(mod(Math.atan2(v[1], v[0]), 2 * Math.PI))
+const rotate = (v: Vector, deg: number) => [
+  v[0] * Math.cos(rad(deg)) - v[1] * Math.sin(rad(deg)),
+  v[0] * Math.sin(rad(deg)) + v[1] * Math.cos(rad(deg))
+]
 const rand = (x: number) => Math.floor(Math.random() * x)
 const sum = (x: number, y: number) => x + y
 const square = (x: number) => x * x
@@ -47,9 +50,19 @@ function firefly (props: { onMove: (position: Vector) => void }) {
   node.style.position = 'fixed'
   node.style.width = '3em'
 
-  const subscription = combined([mouse, finger]).subscribe(
-    destination => (firefly.destination = destination)
-  )
+  const mouseListener = (e: MouseEvent) =>
+    (firefly.destination = [e.clientX, e.clientY])
+  document.addEventListener('mousemove', mouseListener, true)
+  const touchListener = (event: TouchEvent) =>
+    observers.forEach(observer => {
+      let point = [0, 0]
+      for (let i = 0; i < event.touches.length; i++) {
+        const touch = event.touches[i]
+        point = add(point, [touch.clientX, touch.clientY])
+      }
+      observer.next(point)
+    })
+  document.addEventListener('touchmove', touchListener, true)
 
   const cancel = loop(dt => {
     const { destination, position, vspeed } = firefly
@@ -82,15 +95,15 @@ function firefly (props: { onMove: (position: Vector) => void }) {
 
   return () => {
     cancel()
-    subscription.unsubscribe()
+    document.removeEventListener('mousemove', mouseListener, true)
+    document.removeEventListener('touchmove', touchListener, true)
     node.remove()
   }
 }
 
 let observers: Observer<Vector>[] = []
 let cancel = () => {}
-
-const fireflyObservable = observable<Vector>(observer => {
+const subscriber = (observer: Observer<Vector>) => {
   if (observers.length === 0) {
     cancel = firefly({
       onMove: position => observers.map(observer => observer.next(position))
@@ -103,7 +116,13 @@ const fireflyObservable = observable<Vector>(observer => {
       cancel()
     }
   }
-})
+}
+
+const fireflyObservable: Observable<Vector> = {
+  subscribe (consumer) {
+    return { unsubscribe: subscriber({ next: consumer }) }
+  }
+}
 
 declare global {
   interface Window {
