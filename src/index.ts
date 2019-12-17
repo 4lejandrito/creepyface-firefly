@@ -63,15 +63,14 @@ function firefly (props: { onMove: (position: Point) => void }) {
   const mouseListener = (e: MouseEvent) =>
     (firefly.destination = [e.clientX, e.clientY])
   document.addEventListener('mousemove', mouseListener, true)
-  const touchListener = (event: TouchEvent) =>
-    observers.forEach(observer => {
-      let point: Point = [0, 0]
-      for (let i = 0; i < event.touches.length; i++) {
-        const touch = event.touches[i]
-        point = add(point, [touch.clientX, touch.clientY])
-      }
-      observer.next(point)
-    })
+  const touchListener = (event: TouchEvent) => {
+    let point: Point = [0, 0]
+    for (let i = 0; i < event.touches.length; i++) {
+      const touch = event.touches[i]
+      point = add(point, [touch.clientX, touch.clientY])
+    }
+    firefly.destination = point
+  }
   document.addEventListener('touchmove', touchListener, true)
 
   const cancel = loop(dt => {
