@@ -1,7 +1,4 @@
-import {
-  Observer,
-  Observable
-} from 'creepyface/dist/observables/util/observable'
+import { Observer, Observable } from 'creepyface/dist/util/types'
 import { Point } from 'creepyface/dist/util/algebra'
 import raf from 'raf'
 import now from 'present'
@@ -112,10 +109,11 @@ function firefly (props: { onMove: (position: Point) => void }) {
 
 let observers: Observer<Point>[] = []
 let cancel = () => {}
-const subscriber = (observer: Observer<Point>) => {
+
+const fireflyObservable: Observable<Point> = observer => {
   if (observers.length === 0) {
     cancel = firefly({
-      onMove: position => observers.map(observer => observer.next(position))
+      onMove: position => observers.map(observer => observer(position))
     })
   }
   observers = [...observers, observer]
@@ -124,12 +122,6 @@ const subscriber = (observer: Observer<Point>) => {
     if (observers.length === 0) {
       cancel()
     }
-  }
-}
-
-const fireflyObservable: Observable<Point> = {
-  subscribe (consumer) {
-    return { unsubscribe: subscriber({ next: consumer }) }
   }
 }
 
