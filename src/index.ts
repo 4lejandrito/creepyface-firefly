@@ -82,7 +82,7 @@ function firefly (props: { onMove: (position: Point) => void }) {
       vspeed,
       sign(angle) * Math.min(dt * turnSpeed, Math.abs(angle))
     )
-    if (norm(direction) > 10) {
+    if (norm(direction) > Math.random() * 20) {
       firefly.position = add(position, times(newVspeed, dt))
       firefly.vspeed = newVspeed
 
