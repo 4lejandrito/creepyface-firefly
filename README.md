@@ -4,6 +4,8 @@ A point provider for [Creepyface](https://github.com/4lejandrito/creepyface) to 
 
 Try to find the firefly on https://creepyface.io!
 
+[Codepen](https://codepen.io/4lejandrito/pen/povrRWq)
+
 ## Usage
 ```html
 <script src="https://creepyface.io/creepyface.js"></script>
