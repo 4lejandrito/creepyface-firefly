@@ -1,8 +1,6 @@
-import { Observer, Observable } from 'creepyface/dist/util/types'
-import { Point } from 'creepyface/dist/util/algebra'
 import raf from 'raf'
 import now from 'present'
-import creepyface from 'creepyface'
+import creepyface, { Point, Consumer, PointProvider } from 'creepyface'
 
 type Vector = [number, number]
 
@@ -107,24 +105,24 @@ function firefly (props: { onMove: (position: Point) => void }) {
   }
 }
 
-let observers: Observer<Point>[] = []
+let consumers: Consumer<Point>[] = []
 let cancel = () => {}
 
-const fireflyObservable: Observable<Point> = observer => {
-  if (observers.length === 0) {
+const fireflyPointProvider: PointProvider = consumer => {
+  if (consumers.length === 0) {
     cancel = firefly({
-      onMove: position => observers.map(observer => observer(position))
+      onMove: position => consumers.map(consumer => consumer(position))
     })
   }
-  observers = [...observers, observer]
+  consumers = [...consumers, consumer]
   return () => {
-    observers = observers.filter(o => o !== observer)
-    if (observers.length === 0) {
+    consumers = consumers.filter(o => o !== consumer)
+    if (consumers.length === 0) {
       cancel()
     }
   }
 }
 
-creepyface.registerObservable('firefly', fireflyObservable)
+creepyface.registerPointProvider('firefly', fireflyPointProvider)
 
-export default fireflyObservable
+export default fireflyPointProvider
